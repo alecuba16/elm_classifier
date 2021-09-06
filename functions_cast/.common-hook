@@ -1,0 +1,25 @@
+#!/bin/bash
+#Enable hook consider the current directory as you are inside the superproject root (c/cast or /normality)
+#cd .git/modules/functions_common/hooks/ && ln -sf ../../../../functions_common/.common-hook post-commit && ln -sf ../../../../functions_common/.common-hook post-checkout && ln -sf ../../../../functions_common/.common-hook post-fetch && ln -sf ../../../../functions_common/.common-hook post-update
+
+function_name=`pwd | grep -o '[^/]*$'`
+
+if [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
+ git_cmd="sudo -u $(whoami) git"
+# echo "Linux"
+else
+ git_cmd="git"
+fi
+
+newcommits=`eval "$git_cmd -C $GIT_DIR/../../.. --git-dir=$GIT_DIR/../.. --work-tree=$GIT_DIR/../../../ status | grep $function_name | grep -c '(new commits)'"`
+#echo "newcommits: $newcommits $newcommits2"
+if [ "$newcommits" -ge "1" ]; then
+ #latest_submodule_commit=`sudo -u $USER git -C $GIT_DIR/../../.. --git-dir=$GIT_DIR/../.. --work-tree=$GIT_DIR/../../.. submodule status | grep $function_name | cut -d ' ' -f1 | sed 's/+//g'`
+ latest_submodule_commit=`eval "$git_cmd -C $GIT_DIR/../../.. --git-dir=$GIT_DIR/../.. --work-tree=$GIT_DIR/../../.. submodule status | grep $function_name | cut -d' ' -f1 | sed 's/+//g'"`
+ #echo "latest: $latest_submodule_commit"
+ #sudo -u $USER git -C $GIT_DIR/../../.. --git-dir=$GIT_DIR/../.. --work-tree=$GIT_DIR/../../.. add $function_name
+ eval "$git_cmd -C $GIT_DIR/../../.. --git-dir=$GIT_DIR/../.. --work-tree=$GIT_DIR/../../.. add $function_name"
+ #sudo -u $USER git -C $GIT_DIR/../../.. --git-dir=$GIT_DIR/../.. --work-tree=$GIT_DIR/../../.. commit -m "$function_name commit https://bitbucket.org/smartive_rd/$function_name/commits/$latest_submodule_commit"
+ eval "$git_cmd -C $GIT_DIR/../../.. --git-dir=$GIT_DIR/../.. --work-tree=$GIT_DIR/../../.. commit -m \"$function_name commit https://bitbucket.org/smartive_rd/$function_name/commits/$latest_submodule_commit\""
+ echo "Updated parent repo"
+fi
